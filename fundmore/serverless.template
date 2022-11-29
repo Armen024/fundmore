@@ -3,6 +3,32 @@
   "Transform": "AWS::Serverless-2016-10-31",
   "Description": "An AWS Serverless Application.",
   "Resources": {
+    "Post": {
+      "Type": "AWS::Serverless::Function",
+      "Properties": {
+        "Architectures": [
+          "x86_64"
+        ],
+        "Handler": "fundmore::fundmore.Functions::Post",
+        "Runtime": "dotnet6",
+        "CodeUri": "",
+        "MemorySize": 256,
+        "Timeout": 30,
+        "Role": null,
+        "Policies": [
+          "AWSLambdaBasicExecutionRole"
+        ],
+        "Events": {
+          "RootGet": {
+            "Type": "Api",
+            "Properties": {
+              "Path": "/",
+              "Method": "Post"
+            }
+          }
+        }
+      }
+    },
     "Get": {
       "Type": "AWS::Serverless::Function",
       "Properties": {
@@ -23,7 +49,7 @@
             "Type": "Api",
             "Properties": {
               "Path": "/",
-              "Method": "GET"
+              "Method": "Get"
             }
           }
         }

@@ -5,7 +5,7 @@ public class Input
     public int ezidoxApplicationId { get; set; }
     public string tenantId { get; set; }
     public object filogixDealId { get; set; }
-    public object externalDealId { get; set; }
+    public string externalDealId { get; set; }
     public string createdBy { get; set; }
     public object archivedByUserId { get; set; }
     public string name { get; set; }
@@ -33,7 +33,7 @@ public class Input
     public string source { get; set; }
     public bool archived { get; set; }
     public string productId { get; set; }
-    public object dealType { get; set; }
+    public string dealType { get; set; }
     public object clonedApplicationId { get; set; }
     public string mortgageClassification { get; set; }
     public bool locked { get; set; }
@@ -173,7 +173,7 @@ public class Mortgage
     public int mortgageBalance { get; set; }
     public object payoutBalance { get; set; }
     public object insured { get; set; }
-    public object insurer { get; set; }
+    public string insurer { get; set; }
     public string insuranceAccountNum { get; set; }
     public object mortgageNum { get; set; }
     public object prepaymentType { get; set; }
@@ -185,7 +185,7 @@ public class Mortgage
     public object interestAdjustmentDate { get; set; }
     public object firstRegularPaymentDate { get; set; }
     public DateTime? deadlineToAcceptDate { get; set; }
-    public object pst { get; set; }
+    public string pst { get; set; }
     public string compounding { get; set; }
     public bool? close { get; set; }
     public object affiliationProgram { get; set; }

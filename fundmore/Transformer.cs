@@ -16,6 +16,7 @@ namespace fundmore
             general.LenderName = "Rocket Mortgage";
             general.LenderCode = "Rocket Mortgage";
             general.OriginatorName = "FundMore";
+            general.Action = LMS360GeneralAction.LMS360_ServicingImport;
 
             result.General = general;
 
@@ -25,25 +26,71 @@ namespace fundmore
             if (requestedMortgage != null)
             {
 
-                var lMS360Account = new LMS360Account() { AccountID = requestedMortgage.loanNumber, AccountStatus = LMS360AccountAccountStatus.Active };
-                lMS360Account.MortgageInsuranceNumber = requestedMortgage.insuranceAccountNum;
+                var lMS360Account = new LMS360Account();
+                lMS360Account.AccountID = requestedMortgage.loanNumber;
+                lMS360Account.AccountStatus = LMS360AccountAccountStatus.Active;
+
+                lMS360Account.PurposeOfFundsSpecified = true;
+                lMS360Account.PurposeOfFunds = AccountPurposeOfFunds(input);
+
+                lMS360Account.ApplicationID = input.externalDealId;
+
                 lMS360Account.ApplicationDateTimeSpecified = true;
                 lMS360Account.ApplicationDateTime = input.createdAt;
 
 
-                lMS360Account.ApplicationType = LMS360AccountApplicationType.Regular;
-                lMS360Account.ApplicationTypeSpecified = true;
+                if (input.dealType != null)
+                {
+                    lMS360Account.ApplicationTypeSpecified = true;
+                    lMS360Account.ApplicationType = (LMS360AccountApplicationType)Enum.Parse(typeof(LMS360AccountApplicationType), input.dealType);
+                }
+
+                lMS360Account.LineOfBusiness = "A";
+
+
+                lMS360Account.ChannelSpecified = true;
+                lMS360Account.Channel = LMS360AccountChannel.InternalSales;
+
+                lMS360Account.DealID = "todo"; // todo 
+
+                lMS360Account.BasicLoanAmountSpecified = true;
+                lMS360Account.BasicLoanAmount = requestedMortgage.totalMortgageAmount;  // todo?
+
+                lMS360Account.TotalLoanAmountSpecified = true;
+                lMS360Account.TotalLoanAmount = requestedMortgage.totalMortgageAmount;
+
+                lMS360Account.ClosingDateSpecified = true;
+                lMS360Account.ClosingDate = requestedMortgage.closingDate;
+
+
+                lMS360Account.MortgageInsuranceProviderSpecified = true;
+                lMS360Account.MortgageInsuranceProvider = AccountMortgageInsuranceProvider(requestedMortgage.insurer);
+
+
+                lMS360Account.MortgageInsuranceNumber = requestedMortgage.insuranceAccountNum;
+
+                lMS360Account.PremiumAmountSpecified = true;
+                lMS360Account.PremiumAmount = requestedMortgage.insurancePremium;
+
+
+                lMS360Account.PremiumTax = requestedMortgage.pst;
+
+               
+                 // line 31   Anna
+
+                  
+                 // 50 Armen
+
+
+                  //69
+                                              
+
+
 
 
                 lMS360Account.ApplicationFeeSpecified = true;
                 lMS360Account.ApplicationFee = 4;
-
-                lMS360Account.LineOfBusiness = "A";
-                lMS360Account.Channel = LMS360AccountChannel.InternalSales;
-
-                lMS360Account.ChannelSpecified = true;
-
-                lMS360Account.DealID = "dd";
+               
 
 
                 lMS360Account.OtherFinancing = null;
@@ -52,17 +99,13 @@ namespace fundmore
 
                 lMS360Account.ApplicationFeeSpecified = false;
 
-                lMS360Account.TotalLoanAmountSpecified = true;
-                lMS360Account.TotalLoanAmount = requestedMortgage.totalMortgageAmount;
 
-                lMS360Account.ClosingDateSpecified = true;
-                lMS360Account.ClosingDate = requestedMortgage.closingDate;
 
-                lMS360Account.BasicLoanAmountSpecified = true;
-                lMS360Account.BasicLoanAmount = requestedMortgage.totalMortgageAmount;
 
-                lMS360Account.PremiumAmountSpecified = true;
-                lMS360Account.PremiumAmount = requestedMortgage.insurancePremium;
+
+
+
+
 
                 lMS360Account.Component = new LMS360AccountComponent[1] { new LMS360AccountComponent() { LoanAmount = 5, PaymentFrequencyDetails = new LMS360AccountComponentPaymentFrequencyDetails() { } } };
 
@@ -71,6 +114,67 @@ namespace fundmore
             }
 
             return result;
+        }
+
+        private static LMS360AccountMortgageInsuranceProvider? AccountMortgageInsuranceProvider(string insurer)
+        {
+
+            if (insurer == "CMHC")
+            {
+                return LMS360AccountMortgageInsuranceProvider.CMHC;
+            }
+            if (insurer == "Sagen")
+            {
+                return LMS360AccountMortgageInsuranceProvider.Genworth;
+            }
+            if (insurer == "Canada Guaranty")
+            {
+                return LMS360AccountMortgageInsuranceProvider.CanadaGuaranty;
+            }
+
+            Console.WriteLine("AccountMortgageInsuranceProvider cant be mapped");
+            return null;
+
+        }
+
+        private static LMS360AccountPurposeOfFunds AccountPurposeOfFunds(Input input)
+        {
+            if (input.purpose == "ETO")
+                return LMS360AccountPurposeOfFunds.EquityTakeOut;
+
+            if (input.purpose == "Construction")
+                return LMS360AccountPurposeOfFunds.NewConstruction;
+
+            if (input.purpose == "PURCHASE" && input.mortgageClassification == "NEW_BUILD") // todo review mortgageClassification values
+                return LMS360AccountPurposeOfFunds.PurchaseNewConstruction;
+
+            if (input.purpose == "PURCHASE" && input.mortgageClassification == "PORT")
+                return LMS360AccountPurposeOfFunds.PurchasePort;
+
+
+            if (input.purpose == "PURCHASE" && input.mortgageClassification == "PRIVATE")
+                return LMS360AccountPurposeOfFunds.PurchasePrivate;
+
+            if (input.purpose == "PURCHASE" && input.mortgageClassification == "Rent-to-own")
+                return LMS360AccountPurposeOfFunds.PurchaseRenttoown;
+
+            if (input.purpose == "PURCHASE" && input.mortgageClassification == "PURCHASE_PLUS_IMPROVEMENT")
+                return LMS360AccountPurposeOfFunds.PurchasewithImprovements;
+
+            if (input.purpose == "PURCHASE")
+                return LMS360AccountPurposeOfFunds.Purchase;
+
+
+            if (input.purpose == "REFINANCE")
+                return LMS360AccountPurposeOfFunds.Refinance;
+
+
+            if (input.purpose == "SWITCH_TRANSFER")
+                return LMS360AccountPurposeOfFunds.Transfer;
+
+            Console.WriteLine("PurposeOfFunds is set to Unmapped");
+
+            return LMS360AccountPurposeOfFunds.Unmapped;
         }
 
         internal static void ValidateXml(string res)

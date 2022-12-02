@@ -38,8 +38,8 @@ namespace fundmore
                 lMS360Account.ApplicationFeeSpecified = true;
                 lMS360Account.ApplicationFee = 4;
 
-                lMS360Account.LineOfBusiness = "dd";
-                lMS360Account.Channel = LMS360AccountChannel.Referral;
+                lMS360Account.LineOfBusiness = "A";
+                lMS360Account.Channel = LMS360AccountChannel.InternalSales;
 
                 lMS360Account.ChannelSpecified = true;
 
@@ -51,6 +51,18 @@ namespace fundmore
 
 
                 lMS360Account.ApplicationFeeSpecified = false;
+
+                lMS360Account.TotalLoanAmountSpecified = true;
+                lMS360Account.TotalLoanAmount = requestedMortgage.totalMortgageAmount;
+
+                lMS360Account.ClosingDateSpecified = true;
+                lMS360Account.ClosingDate = requestedMortgage.closingDate;
+
+                lMS360Account.BasicLoanAmountSpecified = true;
+                lMS360Account.BasicLoanAmount = requestedMortgage.totalMortgageAmount;
+
+                lMS360Account.PremiumAmountSpecified = true;
+                lMS360Account.PremiumAmount = requestedMortgage.insurancePremium;
 
                 result.Account = new LMS360Account[1];
                 result.Account[0] = lMS360Account;

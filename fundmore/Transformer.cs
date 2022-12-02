@@ -64,6 +64,8 @@ namespace fundmore
                 lMS360Account.PremiumAmountSpecified = true;
                 lMS360Account.PremiumAmount = requestedMortgage.insurancePremium;
 
+                lMS360Account.Component = new LMS360AccountComponent[1] { new LMS360AccountComponent() { LoanAmount = 5, PaymentFrequencyDetails = new LMS360AccountComponentPaymentFrequencyDetails() { } } };
+
                 result.Account = new LMS360Account[1];
                 result.Account[0] = lMS360Account;
             }

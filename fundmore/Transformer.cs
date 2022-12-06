@@ -24,6 +24,9 @@ namespace fundmore
 
             var requestedMortgage = input.Mortgages.SingleOrDefault(x => x.type == "REQUESTED");
             var refinancedMortgage = input.Mortgages.SingleOrDefault(x => x.type == "REFINANCE" && input.purpose == "REFINANCE");
+            var subjectProperty = input.Properties.SingleOrDefault(p => p.type == "PRIMARY");
+
+
             var lMS360Account = new LMS360Account();
             if (requestedMortgage != null)
             {
@@ -50,7 +53,7 @@ namespace fundmore
 
                 lMS360Account.ChannelSpecified = true;
                 lMS360Account.Channel = LMS360AccountChannel.InternalSales;
-                
+
                 lMS360Account.DealID = requestedMortgage.loanNumber;
 
                 lMS360Account.BasicLoanAmountSpecified = true;
@@ -75,36 +78,11 @@ namespace fundmore
 
                 lMS360Account.PremiumTax = requestedMortgage.pst;
 
-                lMS360Account.Charge = GetMortgageRank(requestedMortgage.mortgageType);
-
-                 // line 31   Anna
-
-                // 50 Armen
-
-
-                //69
-
-
-
-                lMS360Account.ApplicationFeeSpecified = true;
-                lMS360Account.ApplicationFee = 4;
-
-
-
-                lMS360Account.OtherFinancing = null;
-                lMS360Account.OtherFinancingSpecified = true;
-
-
-                lMS360Account.ApplicationFeeSpecified = false;
-
-
-
-
-                lMS360Account.Component = new LMS360AccountComponent[1] { new LMS360AccountComponent() { LoanAmount = 5, PaymentFrequencyDetails = new LMS360AccountComponentPaymentFrequencyDetails() { } } };
+                lMS360Account.Charge = GetMortgageRank(requestedMortgage.mortgageType);                
 
             }
 
-            if(refinancedMortgage != null)
+            if (refinancedMortgage != null)
             {
                 lMS360Account.OrigLender = refinancedMortgage.lender;
 
@@ -114,10 +92,169 @@ namespace fundmore
                 lMS360Account.OrigRemainingBalance = refinancedMortgage.mortgageBalance;
             }
 
-            result.Account = new LMS360Account[1];
-            result.Account[0] = lMS360Account;
+            if (subjectProperty != null)
+            {
+                lMS360Account.ImprovementAmountSpecified = true;
+                lMS360Account.ImprovementAmount = subjectProperty.valueOfImprovements;
+
+                lMS360Account.ImprovementDescription = subjectProperty.improvements;
+            }
+
+            lMS360Account.DownPayment = GetAccountDownPaymentSources(input.DownPayments);
+
+
+            var externalCustomerType = new List<string>() {
+                "THIRD_PARTY",
+                "BROKER",
+                "LAWYER",
+                "SUBMITTING_AGENT",
+                "SIGNING_OFFICER",
+               "AGENT"
+            };
+            var externalStakeholders = input.applicants.Where(a => externalCustomerType.Any(ct => ct == a.customerType)).ToArray();
+
+
+            lMS360Account.ExternalContacts = GetAccountExternalContacts(externalStakeholders);
+
+
+            // line 69
+
+
+            lMS360Account.ApplicationFeeSpecified = true;
+            lMS360Account.ApplicationFee = 4;
+
+
+
+            lMS360Account.OtherFinancing = null;
+            lMS360Account.OtherFinancingSpecified = true;
+
+
+            lMS360Account.ApplicationFeeSpecified = false;
+
+
+
+
+            lMS360Account.Component = new LMS360AccountComponent[1] { new LMS360AccountComponent() { LoanAmount = 5, PaymentFrequencyDetails = new LMS360AccountComponentPaymentFrequencyDetails() { } } };
+
+
+
+            result.Account = new LMS360Account[1] { lMS360Account };
+            return result;
+        }
+
+        private static LMS360AccountExternalContacts[] GetAccountExternalContacts(Applicant[] externalStakeholders)
+        {
+            LMS360AccountExternalContacts[] result = new LMS360AccountExternalContacts[externalStakeholders.Length];
+
+            for (int i = 0; i < externalStakeholders.Length; i++)
+            {
+                var applicant = externalStakeholders[i];
+                var lMS360AccountExternalContacts = new LMS360AccountExternalContacts();
+                lMS360AccountExternalContacts.Type = GetAccountExternalContactType(applicant.customerType);
+                lMS360AccountExternalContacts.ExternalSystem = "Lendesk";
+                lMS360AccountExternalContacts.CompanyName = (applicant.customerType == "BROKER" || applicant.customerType == "AGENT") ? applicant.brokerage : (applicant.customerType == "LAWYER" ? applicant.company : null);
+                lMS360AccountExternalContacts.FirstName = applicant.name;
+                lMS360AccountExternalContacts.LastName = applicant.surname;
+                //var applicantAddress=  applicant.ApplicantAddresses.FirstOrDefault(a => a.type == "CURRENT")?.address;
+
+                //if (applicantAddress != null)
+                //{
+                //    lMS360AccountExternalContacts.StreetAddress = new StreetAddress[1] { applicantAddress };
+                //    }
+
+
+
+                result[i] = lMS360AccountExternalContacts;
+            }
+
 
             return result;
+        }
+
+        private static LMS360AccountExternalContactsType GetAccountExternalContactType(string customerType)
+        {
+            //if(customerType == "THIRD_PARTY")   todo
+            //    return LMS360AccountExternalContactsType.
+
+
+            if (customerType == "BROKER" || customerType == "AGENT")
+                return LMS360AccountExternalContactsType.BrokerAgent;
+
+            if (customerType == "LAWYER")
+                return LMS360AccountExternalContactsType.Solicitor;
+
+            if (customerType == "SUBMITTING_AGENT")
+                return LMS360AccountExternalContactsType.SubmissionAgent;
+
+            if (customerType == "SIGNING_OFFICER")
+                return LMS360AccountExternalContactsType.VendorAgent;
+
+            Console.WriteLine("ExternalContactsType cant be mapped");
+            throw new Exception($"unexpected value received for customerType : {customerType}");
+        }
+
+        private static LMS360AccountDownPayment[] GetAccountDownPaymentSources(Downpayment[] downPayments)
+        {
+            LMS360AccountDownPayment[] result = new LMS360AccountDownPayment[downPayments.Length];
+
+            for (int i = 0; i < downPayments.Length; i++)
+            {
+                Downpayment? downpayment = downPayments[i];
+                var lMS360AccountDownPayment = new LMS360AccountDownPayment();
+                lMS360AccountDownPayment.Source = GetAccountDownPaymentSource(downpayment);
+                lMS360AccountDownPayment.Amount = downpayment.amount;
+                lMS360AccountDownPayment.Description = downpayment.description;
+
+                result[i] = lMS360AccountDownPayment;
+            }
+
+
+            return result;
+        }
+
+        private static LMS360AccountDownPaymentSource GetAccountDownPaymentSource(Downpayment downpayment)
+        {
+            if (downpayment.source == "SALE_OF_EXISTING_PROPERTY")
+                return LMS360AccountDownPaymentSource.SaleofExistingProperty;
+
+            if (downpayment.source == "PERSONAL_CASH")
+                return LMS360AccountDownPaymentSource.PersonalCash;
+
+            if (downpayment.source == "RRSP")
+                return LMS360AccountDownPaymentSource.RRSP;
+
+            if (downpayment.source == "SELF_DIRECTED_RRSP")
+                return LMS360AccountDownPaymentSource.RRSP;
+
+            if (downpayment.source == "BORROWED_AGAINST_LIQUID_ASSETS")
+                return LMS360AccountDownPaymentSource.BorrowedAgainstLiquidAssets;
+
+            if (downpayment.source == "GIFT")
+                return LMS360AccountDownPaymentSource.Gift;
+
+            if (downpayment.source == "SWEAT_EQUITY")
+                return LMS360AccountDownPaymentSource.SweatEquity;
+
+            if (downpayment.source == "EXISTING_EQUITY")
+                return LMS360AccountDownPaymentSource.ExistingEquity;
+
+            if (downpayment.source == "SECONDARY_FINANCING")
+                return LMS360AccountDownPaymentSource.SecondaryFinancing;
+
+            if (downpayment.source == "GRANTS")
+                return LMS360AccountDownPaymentSource.Grants;
+
+            if (downpayment.source == "LOAN")
+                return LMS360AccountDownPaymentSource.BorrowedFunds;
+
+            if (downpayment.source == "RENT")
+                return LMS360AccountDownPaymentSource.RenttoOwn;
+
+            if (downpayment.source == "OTHER")
+                return LMS360AccountDownPaymentSource.Other;
+
+            Console.WriteLine("AccountDownPaymentSource cant be mapped");
+            throw new Exception($"unexpected value received for downpayment.source : {downpayment.source}");
         }
 
         private static LMS360AccountMortgageInsuranceProvider? AccountMortgageInsuranceProvider(string insurer)

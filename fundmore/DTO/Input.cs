@@ -131,8 +131,8 @@
         public string tenantId { get; set; }
         public string applicationId { get; set; }
         public string source { get; set; }
-        public object description { get; set; }
-        public int amount { get; set; }
+        public string description { get; set; }
+        public decimal amount { get; set; }
         public DateTime createdAt { get; set; }
         public DateTime updatedAt { get; set; }
         public object deletedAt { get; set; }
@@ -482,7 +482,7 @@
         public int condoFees { get; set; }
         public int annualTaxes { get; set; }
         public string improvements { get; set; }
-        public object valueOfImprovements { get; set; }
+        public decimal? valueOfImprovements { get; set; }
         public object totalExpenses { get; set; }
         public int rpeMonthlyRentalIncome { get; set; }
         public object rpeRentalOffsetOption { get; set; }

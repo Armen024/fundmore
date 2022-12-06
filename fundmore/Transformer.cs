@@ -50,11 +50,11 @@ namespace fundmore
 
                 lMS360Account.ChannelSpecified = true;
                 lMS360Account.Channel = LMS360AccountChannel.InternalSales;
-
-                lMS360Account.DealID = "todo"; // todo 
+                
+                lMS360Account.DealID = requestedMortgage.loanNumber;
 
                 lMS360Account.BasicLoanAmountSpecified = true;
-                lMS360Account.BasicLoanAmount = requestedMortgage.totalMortgageAmount;  // todo?
+                lMS360Account.BasicLoanAmount = requestedMortgage.totalMortgageAmount;
 
                 lMS360Account.TotalLoanAmountSpecified = true;
                 lMS360Account.TotalLoanAmount = requestedMortgage.totalMortgageAmount;
@@ -75,22 +75,22 @@ namespace fundmore
 
                 lMS360Account.PremiumTax = requestedMortgage.pst;
 
-               
-                 // line 31   Anna
 
-                  
-                 // 50 Armen
+                // line 31   Anna
 
 
-                  //69
-                                              
+                // 50 Armen
+
+
+                //69
+
 
 
 
 
                 lMS360Account.ApplicationFeeSpecified = true;
                 lMS360Account.ApplicationFee = 4;
-               
+
 
 
                 lMS360Account.OtherFinancing = null;

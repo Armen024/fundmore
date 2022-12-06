@@ -23,10 +23,10 @@ namespace fundmore
 
 
             var requestedMortgage = input.Mortgages.SingleOrDefault(x => x.type == "REQUESTED");
+            var refinancedMortgage = input.Mortgages.SingleOrDefault(x => x.type == "REFINANCE" && input.purpose == "REFINANCE");
+            var lMS360Account = new LMS360Account();
             if (requestedMortgage != null)
             {
-
-                var lMS360Account = new LMS360Account();
                 lMS360Account.AccountID = requestedMortgage.loanNumber;
                 lMS360Account.AccountStatus = LMS360AccountAccountStatus.Active;
 
@@ -75,16 +75,14 @@ namespace fundmore
 
                 lMS360Account.PremiumTax = requestedMortgage.pst;
 
+                lMS360Account.Charge = GetMortgageRank(requestedMortgage.mortgageType);
 
-                // line 31   Anna
-
+                 // line 31   Anna
 
                 // 50 Armen
 
 
                 //69
-
-
 
 
 
@@ -102,16 +100,22 @@ namespace fundmore
 
 
 
-
-
-
-
-
                 lMS360Account.Component = new LMS360AccountComponent[1] { new LMS360AccountComponent() { LoanAmount = 5, PaymentFrequencyDetails = new LMS360AccountComponentPaymentFrequencyDetails() { } } };
 
-                result.Account = new LMS360Account[1];
-                result.Account[0] = lMS360Account;
             }
+
+            if(refinancedMortgage != null)
+            {
+                lMS360Account.OrigLender = refinancedMortgage.lender;
+
+                lMS360Account.OrigAccountID = refinancedMortgage.mortgageNum;
+
+                lMS360Account.OrigRemainingBalanceSpecified = true;
+                lMS360Account.OrigRemainingBalance = refinancedMortgage.mortgageBalance;
+            }
+
+            result.Account = new LMS360Account[1];
+            result.Account[0] = lMS360Account;
 
             return result;
         }
@@ -133,6 +137,27 @@ namespace fundmore
             }
 
             Console.WriteLine("AccountMortgageInsuranceProvider cant be mapped");
+            return null;
+
+        }
+
+        private static MortgageRank? GetMortgageRank(string mortgageType)
+        {
+
+            if (mortgageType == "First")
+            {
+                return MortgageRank.Item1st;
+            }
+            if (mortgageType == "Second")
+            {
+                return MortgageRank.Item2nd;
+            }
+            if (mortgageType == "Third")
+            {
+                return MortgageRank.Item3rd;
+            }
+
+            Console.WriteLine("MortgageRank cant be mapped");
             return null;
 
         }
